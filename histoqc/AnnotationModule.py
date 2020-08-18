@@ -1,5 +1,5 @@
 import logging
-from BaseImage import printMaskHelper
+from histoqc.BaseImage import printMaskHelper
 from skimage import io, img_as_ubyte
 from skimage.draw import polygon
 import os
@@ -67,7 +67,7 @@ def get_points_from_geojson(s, fname):
         elif geom_type == 'Polygon':
             for points in coordinates:
                 point_sets.append([(coord[0], coord[1]) for coord in points])
-        elif geom_type == 'LineString':            
+        elif geom_type == 'LineString':
             point_sets.append([(coord[0], coord[1]) for coord in coordinates])
         else:
             msg = f"Skipping {geom_type} geometry in {fname}. Only Polygon, MultiPolygon, and LineString annotation types can be used."

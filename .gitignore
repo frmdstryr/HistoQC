@@ -1,0 +1,10 @@
+.kdev4/
+*.kdev4
+
+dist/
+build/
+
+*.pyc
+__pycache__/
+
+*.egg-info/
