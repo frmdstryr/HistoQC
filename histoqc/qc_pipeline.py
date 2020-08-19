@@ -9,7 +9,7 @@ import matplotlib as mpl  # need to do this before anything else tries to access
 import multiprocessing, logging
 from importlib import import_module
 import warnings
-import histoqc import BaseImage
+from histoqc import BaseImage
 import sys
 import datetime
 
