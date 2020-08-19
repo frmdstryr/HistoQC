@@ -188,13 +188,15 @@ def byExampleWithFeatures(s, params):
                 path = ex[0]
                 if not os.path.exists(path):
                     path = os.path.join(histoqc.__path__[0], path)
-
                 img = io.imread(path)
                 eximg = compute_features(img, params)
                 eximg = eximg.reshape(-1, eximg.shape[2])
                 model_vals.append(eximg)
 
-                mask = io.imread(ex[1], as_gray=True).reshape(-1, 1)
+                path = ex[1]
+                if not os.path.exists(path):
+                    path = os.path.join(histoqc.__path__[0], path)
+                mask = io.imread(path, as_gray=True).reshape(-1, 1)
                 model_labels = np.vstack((model_labels, mask))
 
             # do stuff here with model_vals
