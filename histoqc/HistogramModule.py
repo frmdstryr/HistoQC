@@ -1,11 +1,15 @@
-import logging
 import os
+import logging
 import numpy as np
-from skimage import io
 import matplotlib.pyplot as plt
+from skimage import io
 from distutils.util import strtobool
 
-global_holder = {} #this holds a local copy of the histograms of the template images so that they need only be computed once
+import histoqc
+
+# this holds a local copy of the histograms of the template images so that
+# they need only be computed once
+global_holder = {}
 
 
 def getHistogram(s, params):
@@ -20,7 +24,8 @@ def getHistogram(s, params):
         img = img.reshape(-1, 3)
 
     ax = plt.axes()
-    ax.hist(img, bins=bins, density=True, range=(0, 255), histtype='step', color=("r", "g", "b"))
+    ax.hist(img, bins=bins, density=True, range=(0, 255),
+            histtype='step', color=("r", "g", "b"))
 
     ax.grid(True)
     ax.set_title('Color Distirubtion for ' + s["filename"])
@@ -38,7 +43,8 @@ def computeHistogram(img, bins, mask=-1):
         if (isinstance(mask, np.ndarray)):
             vals = vals[mask.flatten()]
 
-        result[:, chan] = np.histogram(vals, bins=bins, density=True, range=[0, 255])[0]
+        result[:, chan] = np.histogram(
+            vals, bins=bins, density=True, range=[0, 255])[0]
 
     return result
 
@@ -47,23 +53,29 @@ def compareToTemplates(s, params):
     logging.info(f"{s['filename']} - \tcompareToTemplates")
     bins = int(params.get("bins", 20))
     limit_to_mask = strtobool(params.get("limit_to_mask", True))
-    if (not global_holder.get("templates", False)): #if the histograms haven't already been computed, compute and store them now
+    if not global_holder.get("templates", False):
+        # if the histograms haven't already been computed,
+        # compute and store them now
         templates = {}
         for template in params["templates"].splitlines():
-            templates[os.path.splitext(os.path.basename(template))[0]] = computeHistogram(io.imread(template), bins)
+            if not os.path.exists(template):
+                template = os.path.join(histoqc.__path__[0], template)
+            k = os.path.splitext(os.path.basename(template))[0]
+            templates[k] = computeHistogram(io.imread(template), bins)
             # compute each of their histograms
         global_holder["templates"] = templates
 
     img = s.getImgThumb(s["image_work_size"])
 
-    if (limit_to_mask):
+    if limit_to_mask:
         mask = s["img_mask_use"]
         if len(mask.nonzero()[0]) == 0:
-
-            logging.warning(f"{s['filename']} - HistogramModule.compareToTemplates NO tissue "
-                            f"remains detectable in mask!")
-            s["warnings"].append(f"HistogramModule.compareToTemplates NO tissue "
-                                        f"remains detectable in mask!")
+            logging.warning(
+                f"{s['filename']} - HistogramModule.compareToTemplates NO "
+                f"tissue remains detectable in mask!")
+            s["warnings"].append(
+                f"HistogramModule.compareToTemplates NO tissue "
+                f"remains detectable in mask!")
 
             imghst = np.zeros((bins,3))
 
