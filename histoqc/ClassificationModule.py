@@ -6,6 +6,7 @@ from ast import literal_eval as make_tuple
 
 from distutils.util import strtobool
 
+import histoqc
 from histoqc.BaseImage import printMaskHelper
 from skimage import io, img_as_ubyte
 from skimage.filters import gabor_kernel, frangi, gaussian, median, laplace
@@ -82,7 +83,11 @@ def compute_lbp(img, params):
     lbp_points = int(params.get("lbp_points", 24))  # example sets radius * 8
     lbp_method = params.get("lbp_method", "default")
 
-    return local_binary_pattern(rgb2gray(img), P=lbp_points, R=lbp_radius, method=lbp_method)[:, :, None]
+    return local_binary_pattern(
+        rgb2gray(img),
+        P=lbp_points,
+        R=lbp_radius,
+        method=lbp_method)[:, :, None]
 
 
 def compute_gaussian(img, params):
@@ -131,7 +136,12 @@ def compute_frangi(img, params):
     frangi_beta1 = float(params.get("frangi_beta1", .5))
     frangi_beta2 = float(params.get("frangi_beta2", 15))
     frangi_black_ridges = strtobool(params.get("frangi_black_ridges", "True"))
-    feat = frangi(rgb2gray(img), scale_range = frangi_scale_range, scale_step =frangi_scale_step, beta =frangi_beta1, gamma=frangi_beta2, black_ridges  =frangi_black_ridges)
+    feat = frangi(rgb2gray(img),
+                  scale_range=frangi_scale_range,
+                  scale_step=frangi_scale_step,
+                  beta=frangi_beta1,
+                  gamma=frangi_beta2,
+                  black_ridges=frangi_black_ridges)
     return feat[:, :, None]  # add singleton dimension
 
 
@@ -163,7 +173,9 @@ def byExampleWithFeatures(s, params):
         sys.exit(1)
         return
 
-    with params["lock"]:  # this lock is shared across all threads such that only one thread needs to train the model
+    # this lock is shared across all threads such that only one thread needs
+    # to train the model
+    with params["lock"]:
         # then it is shared with all other modules
         if not params["shared_dict"].get("model_" + name, False):
             logging.info(f"{s['filename']} - Training model ClassificationModule.byExample:{name}")
@@ -173,7 +185,11 @@ def byExampleWithFeatures(s, params):
 
             for ex in params["examples"].splitlines():
                 ex = ex.split(":")
-                img = io.imread(ex[0])
+                path = ex[0]
+                if not os.path.exists(path):
+                    path = os.path.join(histoqc.__path__[0], path)
+
+                img = io.imread(path)
                 eximg = compute_features(img, params)
                 eximg = eximg.reshape(-1, eximg.shape[2])
                 model_vals.append(eximg)
