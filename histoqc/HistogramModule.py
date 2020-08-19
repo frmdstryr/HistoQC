@@ -59,6 +59,7 @@ def compareToTemplates(s, params):
         templates = {}
         for template in params["templates"].splitlines():
             if not os.path.exists(template):
+                # Look if it's bundled in the package
                 template = os.path.join(histoqc.__path__[0], template)
             k = os.path.splitext(os.path.basename(template))[0]
             templates[k] = computeHistogram(io.imread(template), bins)

@@ -255,7 +255,7 @@ def main():
         results.append(res)
 
     for r in results:
-        logging.info(r.get(timeout=30))
+        logging.info(r.get(timeout=60*30)) # 30 mins??
 
     pool.close()
     pool.join()
@@ -263,17 +263,22 @@ def main():
     csv_report.close()
 
     logging.info("------------Done---------\n")
-    logging.info("These images failed (available also in error.log), "
-                 "warnings are listed in warnings column in output:")
 
-    for fname, error in failed:
-        logging.info(f"{fname}\t{error}")
+    if failed:
+        logging.info("These images failed (available also in error.log), "
+                     "warnings are listed in warnings column in output:")
+
+        for fname, error in failed:
+            logging.info(f"{fname}\t{error}")
 
     if not args.symlinkoff:
         origin = os.path.realpath(args.outdir)
-        target = os.path.normpath(
-            histoqc.__path__[0] + "/UserInterface/Data/" +
-            os.path.basename(os.path.normpath(args.outdir)))
+        #target = os.path.normpath(
+        #    histoqc.__path__[0] + "/UserInterface/Data/" +
+        #    os.path.basename(os.path.normpath(args.outdir)))
+        data_dir = "/app/data/ui/data/"
+        make_dir_safe(data_dir)
+        target = os.path.join(data_dir, os.path.basename(os.path.normpath(args.outdir)))
         try:
             os.symlink(origin, target, target_is_directory=True)
             logging.info("Symlink to output directory created")
